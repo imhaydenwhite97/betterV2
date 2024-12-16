@@ -1,0 +1,111 @@
+/* Base Loading Screen Styles */
+.loading-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    background: #dde8ee;
+    z-index: 99999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transform-origin: center center;
+}
+
+.loading-screen-content {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+}
+
+/* Logo and Circle Styles */
+.logo-container {
+    position: relative;
+    width: 120px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform-origin: center center;
+}
+
+.logo-container img {
+    width: 100%;
+    height: auto;
+    position: relative;
+    z-index: 2;
+    margin: 0 auto;
+}
+
+.expanding-circle {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 125px;
+    height: 125px;
+    background: #32302f;
+    border-radius: 50%;
+    z-index: 1;
+}
+
+/* Bottom Logo Styles */
+.bottom-logo {
+    position: absolute;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 112.5px;
+    display: flex;
+    justify-content: center;
+    z-index: 2;
+}
+
+.bottom-logo img {
+    width: 75%;
+    height: auto;
+    margin: 0 auto;
+    transition: filter 0.3s ease;
+}
+
+/* Coordinated Animations */
+.loading-screen.exit .expanding-circle {
+    animation: circleExpand 4.5s cubic-bezier(0.645, 0.045, 0.355, 1) forwards;
+}
+
+.loading-screen.exit .logo-container img {
+    animation: logoScale 4.5s cubic-bezier(0.645, 0.045, 0.355, 1) forwards;
+}
+
+.loading-screen.exit {
+    animation: finalFade 1s cubic-bezier(0.645, 0.045, 0.355, 1) forwards;
+    animation-delay: 4.5s;
+}
+
+.loading-screen.exit .logo-container,
+.loading-screen.exit .bottom-logo {
+    animation: none;
+}
+
+@keyframes circleExpand {
+    0% { transform: translate(-50%, -50%) scale(1); }
+    20% { transform: translate(-50%, -50%) scale(0.8); }
+    40% { transform: translate(-50%, -50%) scale(1); }
+    100% { transform: translate(-50%, -50%) scale(100); }
+}
+
+@keyframes logoScale {
+    0% { transform: scale(1); }
+    20% { transform: scale(0.8); }
+    40% { transform: scale(1); }
+    100% { transform: scale(1); }
+}
+
+@keyframes finalFade {
+    0% { opacity: 1; }
+    100% { opacity: 0; }
+}
