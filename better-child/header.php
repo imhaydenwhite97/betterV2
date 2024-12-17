@@ -107,6 +107,7 @@ $slider_options = array('none', 'slider');
 
 <body <?php body_class(); ?>>
     <?php wp_body_open(); ?>
+    <?php get_template_part('loading-screen/loading-screen'); ?>
     <?php
     // leftside menu display on mobile
     get_template_part('templates/leftside-menu');
@@ -265,7 +266,7 @@ $slider_options = array('none', 'slider');
             !is_page_template('sign-successful.php') &&
             !is_page_template('supporters-list.php') && 
             !is_page_template('container.php') && 
-            (!is_page_template('fullwidth.php') || conikal_check_woocommerce_pages(false, 'edit-address') || conikal_check_woocommerce_pages(false, 'payment-methods') || conikal_check_woocommerce_('is_account_page')) &&
+            (!is_page_template('fullwidth.php') || conikal_check_woocommerce_pages(false, 'edit-address') || conikal_check_woocommerce_pages(false, 'payment-methods') || conikal_check_woocommerce_pages('is_account_page')) &&
             !conikal_check_woocommerce_pages() &&
             !conikal_check_woocommerce_pages(false, 'orders') && 
             !conikal_check_woocommerce_pages(false, 'downloads') &&

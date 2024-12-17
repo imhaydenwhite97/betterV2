@@ -6,17 +6,6 @@
  * @link https://developer.wordpress.org/themes/basics/theme-functions/
  */
 
-/*
- * If your child theme has more than one .css file (eg. ie.css, style.css, main.css) then
- * you will have to make sure to maintain all of the parent theme dependencies.
- *
- * Make sure you're using the correct handle for loading the parent theme's styles.
- * Failure to use the proper tag will result in a CSS file needlessly being loaded twice.
- * This will usually not affect the site appearance, but it's inefficient and extends your page's loading time.
- *
- * @link https://codex.wordpress.org/Child_Themes
- */
-
 add_action( 'wp_enqueue_scripts', 'conikal_campoal_child_styles', 10 );
 function conikal_campoal_child_styles() {
     wp_enqueue_style('campoal-style', get_template_directory_uri() . '/style.css', array(), wp_get_theme()->parent()->get('Version'));
@@ -34,6 +23,15 @@ function campoal_child_enqueue_styles() {
 }
 add_action('wp_enqueue_scripts', 'campoal_child_enqueue_styles');
 
+// Force home-header.php everywhere
+function force_home_header() {
+    remove_all_actions('get_header');
+    add_action('get_header', function() {
+        get_template_part('templates/header/home-header');
+    }, 1);
+}
+add_action('after_setup_theme', 'force_home_header', 11);
+
 // Ensure proper dropdown initialization
 function campoal_child_menu_classes($classes, $item) {
     if (in_array('menu-item-has-children', $classes)) {
@@ -45,10 +43,17 @@ add_filter('nav_menu_css_class', 'campoal_child_menu_classes', 10, 2);
 
 /** Load in the loading screen */
 function enqueue_loading_screen() {
+    // Remove the old loading screen enqueue
+    wp_dequeue_script('loading-screen');
+    
+    // Add the loading screen with priority 1 to load first
     wp_enqueue_style('loading-screen', get_stylesheet_directory_uri() . '/loading-screen/loading-screen.css');
-    wp_enqueue_script('loading-screen', get_stylesheet_directory_uri() . '/loading-screen/loading-screen.js', array('jquery'), '1.0', true);
+    wp_enqueue_script('loading-screen', get_stylesheet_directory_uri() . '/loading-screen/loading-screen.js', array('jquery'), '1.0', false);
+    
+    // Add loading screen initialization
+    wp_add_inline_script('loading-screen', 'document.documentElement.style.visibility = "hidden";', 'before');
 }
-add_action('wp_enqueue_scripts', 'enqueue_loading_screen');
+add_action('wp_enqueue_scripts', 'enqueue_loading_screen', 1);
 
 /** Load in Mega Menu */
 function register_mega_menu() {
@@ -72,3 +77,11 @@ class Quadrant_Menu_Walker extends Walker_Nav_Menu {
         $output .= "</ul>";
     }
 }
+
+
+
+function enqueue_user_menu_assets() {
+    wp_enqueue_style('user-menu-style', get_stylesheet_directory_uri() . '/user-menu/user-menu.css', array(), '1.0.0');
+    wp_enqueue_script('user-menu-script', get_stylesheet_directory_uri() . '/user-menu/user-menu.js', array('jquery'), '1.0.0', true);
+}
+add_action('wp_enqueue_scripts', 'enqueue_user_menu_assets');
