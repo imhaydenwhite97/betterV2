@@ -1,31 +1,67 @@
-jQuery(document).ready(function($) {
-    const userMenu = {
-        init: function() {
-            this.trigger = $('.user-menu-trigger');
-            this.content = $('.user-menu-content');
-            this.bindEvents();
-        },
+document.documentElement.classList.add('preload');
 
-        bindEvents: function() {
-            this.trigger.on('click', this.toggleMenu.bind(this));
-            $(document).on('click', this.handleClickOutside.bind(this));
-        },
+window.addEventListener('load', () => {
+    document.documentElement.classList.remove('preload');
+    
+    const trigger = document.querySelector('.user-menu .menu-button');
+    const closeBtn = document.querySelector('.user-menu-close');
+    const overlay = document.querySelector('.user-menu-overlay');
+    const html = document.documentElement;
+    let scrollPosition = 0;
 
-        toggleMenu: function(e) {
-            e.preventDefault();
-            this.trigger.toggleClass('active');
-            this.content.toggleClass('active');
-        },
-
-        handleClickOutside: function(e) {
-            if (!this.trigger.is(e.target) && 
-                !this.content.is(e.target) && 
-                this.content.has(e.target).length === 0) {
-                this.trigger.removeClass('active');
-                this.content.removeClass('active');
-            }
+    // Set initial coordinates
+    const initialRect = trigger.getBoundingClientRect();
+    const initialX = initialRect.left + (initialRect.width / 2);
+    const initialY = initialRect.top + (initialRect.height / 2);
+    overlay.style.setProperty('--x', `${initialX}px`);
+    overlay.style.setProperty('--y', `${initialY}px`);
+    
+    function lockScroll() {
+        scrollPosition = window.pageYOffset;
+        html.style.overflow = 'hidden';
+        html.style.position = 'fixed';
+        html.style.width = '100%';
+        html.style.top = `-${scrollPosition}px`;
+    }
+    
+    function unlockScroll() {
+        html.style.removeProperty('overflow');
+        html.style.removeProperty('position');
+        html.style.removeProperty('width');
+        html.style.removeProperty('top');
+        window.scrollTo(0, scrollPosition);
+    }
+    
+    function openMenu() {
+        const rect = trigger.getBoundingClientRect();
+        const x = rect.left + (rect.width / 2);
+        const y = rect.top + (rect.height / 2);
+        
+        overlay.style.setProperty('--x', `${x}px`);
+        overlay.style.setProperty('--y', `${y}px`);
+        
+        trigger.classList.add('active');
+        overlay.classList.add('active');
+        lockScroll();
+    }
+    
+    function closeMenu() {
+        overlay.classList.add('closing');
+        overlay.classList.remove('active');
+        trigger.classList.remove('active');
+        unlockScroll();
+        
+        setTimeout(() => {
+            overlay.classList.remove('closing');
+        }, 1200);
+    }
+    
+    trigger.addEventListener('click', openMenu);
+    closeBtn.addEventListener('click', closeMenu);
+    
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && overlay.classList.contains('active')) {
+            closeMenu();
         }
-    };
-
-    userMenu.init();
+    });
 });
