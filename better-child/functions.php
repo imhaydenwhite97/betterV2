@@ -26,11 +26,16 @@ add_action('wp_enqueue_scripts', 'campoal_child_enqueue_styles');
 // Force home-header.php everywhere
 function force_home_header() {
     remove_all_actions('get_header');
+    remove_action('campoal_header', 'campoal_header_markup');
+    remove_action('wp_body_open', 'campoal_header_markup');
+    remove_action('template_redirect', 'campoal_header_markup');
+    
     add_action('get_header', function() {
         get_template_part('templates/header/home-header');
     }, 1);
 }
-add_action('after_setup_theme', 'force_home_header', 11);
+add_action('init', 'force_home_header', 1);
+add_action('wp', 'force_home_header', 1);
 
 // Ensure proper dropdown initialization
 function campoal_child_menu_classes($classes, $item) {
@@ -81,7 +86,162 @@ class Quadrant_Menu_Walker extends Walker_Nav_Menu {
 
 
 function enqueue_user_menu_assets() {
-    wp_enqueue_style('user-menu-style', get_stylesheet_directory_uri() . '/user-menu/user-menu.css', array(), '1.0.0');
-    wp_enqueue_script('user-menu-script', get_stylesheet_directory_uri() . '/user-menu/user-menu.js', array('jquery'), '1.0.0', true);
+    // Enqueue user menu styles
+    wp_enqueue_style(
+        'user-menu-style', 
+        get_stylesheet_directory_uri() . '/user-menu/user-menu.css',
+        array(),
+        '1.0.0'
+    );
+
+    // Enqueue user menu scripts
+    wp_enqueue_script(
+        'user-menu-script',
+        get_stylesheet_directory_uri() . '/user-menu/user-menu.js',
+        array('jquery'),
+        '1.0.0',
+        true
+    );
 }
-add_action('wp_enqueue_scripts', 'enqueue_user_menu_assets');
+add_action('wp_enqueue_scripts', 'enqueue_user_menu_assets', 20);
+
+
+// Enqueue header removal
+function remove_all_headers_except_home() {
+    remove_action('get_header', 'get_template_part');
+    
+    add_action('wp_head', function() {
+        ?>
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const headers = document.querySelectorAll('.app-header');
+                headers.forEach(header => header.remove());
+            });
+        </script>
+        <?php
+    });
+}
+add_action('init', 'remove_all_headers_except_home', 1);
+
+
+// Enqueue forced homepage header removal
+function force_single_header_everywhere() {
+    add_action('wp_head', function() {
+        ?>
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                // Remove all unwanted headers
+                const unwantedHeaders = document.querySelectorAll('.app-header, .front-hero, .post-hero, .page-hero');
+                unwantedHeaders.forEach(header => header.remove());
+                
+                // Keep only the first home-header
+                const homeHeaders = document.querySelectorAll('.home-header');
+                if (homeHeaders.length > 1) {
+                    for (let i = 1; i < homeHeaders.length; i++) {
+                        homeHeaders[i].remove();
+                    }
+                }
+            });
+        </script>
+        <?php
+    });
+}
+add_action('init', 'force_single_header_everywhere', 1);
+
+
+
+
+// Enqueue cursor effect
+function enqueue_cursor_files() {
+    wp_enqueue_style('custom-cursor', get_stylesheet_directory_uri() . '/style.css');
+    wp_enqueue_script('cursor-js', get_stylesheet_directory_uri() . '/js/cursor.js', array(), '1.0', true);
+}
+add_action('wp_enqueue_scripts', 'enqueue_cursor_files');
+
+
+
+
+
+function adjust_header_logo_spacing() {
+    add_action('wp_head', function() {
+        ?>
+        <style>
+            .home-header .header-menu-logo {
+                padding-left: 0 !important;
+            }
+            
+            .home-header .logo {
+                margin-left: 0px !important;
+            }
+            
+            @media only screen and (max-width: 767px) {
+                .home-header .logo {
+                    margin-left: 4px !important;
+                }
+            }
+        </style>
+        <?php
+    });
+}
+add_action('init', 'adjust_header_logo_spacing');
+
+
+
+
+function register_my_menus() {
+    register_nav_menus(
+        array(
+            'mega-menu' => __('Mega Menu'),
+            'user-menu' => __('User Menu'),
+            'footer-menu' => __('Footer Menu')
+        )
+    );
+}
+add_action('after_setup_theme', 'register_my_menus');
+
+
+
+
+// enqueue new menu position
+class User_Menu_Walker extends Walker_Nav_Menu {
+    private $current_quadrant = 0;
+    
+    function start_lvl(&$output, $depth = 0, $args = array()) {
+        $output .= "<ul class='sub-menu'>";
+    }
+
+    function start_el(&$output, $item, $depth = 0, $args = array(), $id = 0) {
+        if ($depth === 0) {
+            if ($this->current_quadrant % 4 === 0) {
+                $output .= '<div class="user-quadrant">';
+            }
+            $output .= '<h3>' . $item->title . '</h3>';
+            if ($item->description) {
+                $output .= '<p class="menu-description">' . $item->description . '</p>';
+            }
+        } else {
+            $output .= '<li>';
+            $output .= '<a href="' . $item->url . '">' . $item->title . '</a>';
+            $output .= '</li>';
+        }
+        
+        if ($depth === 0) {
+            $this->current_quadrant++;
+        }
+    }
+
+    function end_el(&$output, $item, $depth = 0, $args = array()) {
+        if ($depth === 0 && $this->current_quadrant % 4 === 0) {
+            $output .= '</div>';
+        }
+    }
+}
+
+
+
+function register_user_menu_location() {
+    register_nav_menus(array(
+        'user-menu' => __('User Menu', 'better-child')
+    ));
+}
+add_action('after_setup_theme', 'register_user_menu_location');
